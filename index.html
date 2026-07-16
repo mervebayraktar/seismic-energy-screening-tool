@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BS-EES Portfolio Prioritization Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+      :root {
+        --bg: #f2f3f5;
+        --panel: #ffffff;
+        --ink: #1c2430;
+        --muted: #5a6472;
+        --line: #d7dbe1;
+        --accent: #1f3a5c;
+        --accent-dark: #142943;
+        --accent-2: #3d6690;
+        --yellow: #c9a930;
+        --orange: #b96a1f;
+        --red: #a5322c;
+        --green: #29714a;
+        --bs-bg: #f8ecec;
+        --bs-line: #dcb3b0;
+        --bs-ink: #7a2620;
+        --ees-bg: #eaf0f8;
+        --ees-line: #b7cbe2;
+        --ees-ink: #1c3e63;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Times New Roman", Times, serif;
+        color: var(--ink);
+        background: var(--bg);
+      }
+      .wrap { max-width: 1400px; margin: 0 auto; padding: 28px 20px 40px; }
+      .hero, .panel, .card, .stat {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+      }
+      .hero { padding: 26px 28px; margin-bottom: 20px; border-top: 3px solid var(--accent); }
+      .eyebrow {
+        font-size: 0.78rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--accent);
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      h1, h2, h3, h4, p { margin: 0; }
+      h1 { font-size: clamp(1.7rem, 2.4vw, 2.4rem); line-height: 1.15; font-weight: 700; }
+      .lede {
+        max-width: 980px;
+        color: var(--muted);
+        margin-top: 12px;
+        line-height: 1.6;
+        font-size: 1rem;
+      }
+      .layout, .stats, .form-grid, .dashboard-grid {
+        display: grid;
+        gap: 16px;
+      }
+      .layout { grid-template-columns: 1fr 360px; align-items: start; }
+      .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 20px; }
+      .dashboard-grid { grid-template-columns: 1fr 1fr; }
+      .card, .panel, .stat { padding: 18px; }
+      .stat { border-top: 3px solid var(--accent); }
+      .stat .eyebrow { margin-bottom: 4px; }
+      .stat .number { font-size: 1.9rem; font-weight: 700; margin-top: 6px; color: var(--accent-dark); }
+      .muted, .small { color: var(--muted); }
+      .small { font-size: 0.88rem; line-height: 1.55; }
+      .tabbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 18px; border-bottom: 1px solid var(--line); }
+      .tab {
+        border: 1px solid var(--line);
+        border-bottom: none;
+        background: #eceef1;
+        color: var(--ink);
+        padding: 10px 16px;
+        border-radius: 6px 6px 0 0;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 0.95rem;
+      }
+      .tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+      .view { display: none; }
+      .view.active { display: block; }
+      .panel h2 { margin-bottom: 14px; font-size: 1.12rem; font-weight: 700; }
+      .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+      .field label { font-size: 0.88rem; color: var(--muted); font-weight: 600; }
+      input, select, textarea, button {
+        font: inherit;
+      }
+      input, select, textarea {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        background: white;
+        padding: 9px 10px;
+      }
+      textarea { min-height: 110px; resize: vertical; }
+      button {
+        border: 0;
+        border-radius: 4px;
+        padding: 10px 16px;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 0.92rem;
+      }
+      .primary { background: var(--accent); color: white; }
+      .primary:hover { background: var(--accent-dark); }
+      .secondary { background: #e6e9ed; color: var(--ink); }
+      .secondary:hover { background: #dadde3; }
+      .ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+      .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+      .result-box {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .result-item {
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 12px 14px;
+        background: rgba(255, 255, 255, 0.6);
+      }
+      .result-item strong { display: block; font-size: 1.2rem; margin-top: 4px; }
+      .info-list {
+        display: grid;
+        gap: 10px;
+      }
+      .info-card {
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 12px 14px;
+        background: #fafbfc;
+      }
+      .info-card h4 { margin-bottom: 6px; font-size: 0.95rem; font-weight: 700; color: var(--accent-dark); }
+      .info-card a { color: var(--accent); }
+      .badge {
+        display: inline-block;
+        border-radius: 3px;
+        padding: 3px 9px;
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
+      .risk-yellow { background: #f3ecc7; color: #786500; }
+      .risk-orange { background: #f2ddc4; color: #8a4a10; }
+      .risk-red { background: #f0d2d0; color: #7a231e; }
+      .risk-green { background: #d4e7da; color: #245c39; }
+      .status-included { background: #d4e7da; color: #245c39; }
+      .status-excluded { background: #f0d2d0; color: #7a231e; }
+      .dropzone {
+        border: 1px dashed var(--line);
+        border-radius: 6px;
+        padding: 20px;
+        background: #fafbfc;
+      }
+      .table-wrap {
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 480px;
+        background: #ffffff;
+      }
+      th, td {
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+      th { background: #eceef1; position: sticky; top: 0; z-index: 1; font-weight: 700; }
+      .filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+      .filters > * { min-width: 170px; }
+      .chart-list { display: grid; gap: 10px; }
+      .chart-row {
+        display: grid;
+        grid-template-columns: 180px 1fr 44px;
+        gap: 10px;
+        align-items: center;
+      }
+      .bar {
+        height: 9px;
+        border-radius: 2px;
+        /* Neutral gray by default. Yellow/orange/red are reserved for BS (seismic)
+           risk-level indicators specifically; everything else stays gray so those
+           three colors keep a single, unambiguous meaning across the tool. */
+        background: #9aa2ad;
+      }
+      .bar.risk-bar-yellow { background: var(--yellow); }
+      .bar.risk-bar-orange { background: var(--orange); }
+      .bar.risk-bar-red { background: var(--red); }
+      .bar.param-good { background: var(--green); }
+      .bar.param-bad { background: var(--red); }
+      .bar.param-neutral { background: #9aa2ad; }
+      .note {
+        margin-top: 14px;
+        padding: 12px 14px;
+        border-radius: 4px;
+        background: #eceef1;
+        border: 1px solid var(--line);
+        font-size: 0.88rem;
+      }
+      .param-group h3 { font-size: 1rem; margin-bottom: 10px; font-weight: 700; }
+
+      /* BS (seismic) stage — tinted red per spec */
+      .stage-panel { border-radius: 6px; padding: 18px; }
+      .bs-tint { background: var(--bs-bg); border: 1px solid var(--bs-line); }
+      .bs-tint h2 { color: var(--bs-ink); }
+      /* EES (energy) stage — tinted blue per spec */
+      .ees-tint { background: var(--ees-bg); border: 1px solid var(--ees-line); margin-top: 24px; }
+      .ees-tint h2 { color: var(--ees-ink); }
+
+      @media (max-width: 1120px) {
+        .layout, .dashboard-grid { grid-template-columns: 1fr; }
+        .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+      @media (max-width: 720px) {
+        .form-grid, .result-box, .stats { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <section class="hero">
+        <div class="eyebrow">Decision Support Tool</div>
+        <h1>Seismic screening and energy-efficiency prioritization for public building portfolios</h1>
+        <p class="lede">
+          Enter buildings one at a time or import a whole portfolio as CSV or XLSX. The tool computes the Building
+          Score (<code>BS</code>) and Energy Efficiency Score (<code>EES</code>), generates a
+          <code>Prioritization</code> ranking, and keeps the list in the browser, showing how many buildings are
+          loaded, how they are distributed, and which ones should be addressed first.
+        </p>
+      </section>
+
+      <div class="tabbar">
+        <button class="tab active" data-tab="single">Manual Building Entry</button>
+        <button class="tab" data-tab="batch">Batch Upload</button>
+        <button class="tab" data-tab="dashboard">Portfolio Dashboard</button>
+      </div>
+
+      <section class="view active" id="view-single">
+        <div class="layout">
+          <div class="panel">
+            <div class="stage-panel bs-tint">
+              <h2>Stage 1: BS Inputs (Seismic)</h2>
+              <div class="form-grid" id="bsFields"></div>
+              <div class="actions">
+                <button class="primary" id="computeBsBtn">Compute BS</button>
+                <button class="secondary" id="continueToEesBtn" disabled>Continue to EES</button>
+                <button class="primary" id="saveRecordBtn" disabled>Save to Portfolio</button>
+                <button class="ghost" id="resetSingleBtn">Reset Form</button>
+              </div>
+
+              <div class="note small">
+                The BS step determines the risk range. If the result is <code>red</code>, the EES stage is skipped and
+                <strong>Save to Portfolio</strong> becomes available immediately so the record can be added as excluded.
+                For <code>yellow</code> or <code>orange</code>, complete Stage 2 first.
+              </div>
+
+              <div class="result-box" style="margin-top: 18px;" id="bsResults"></div>
+            </div>
+
+            <div id="eesSection" class="stage-panel ees-tint" style="display: none;">
+              <h2>Stage 2: EES Inputs (Energy Efficiency)</h2>
+              <div class="form-grid" id="eesFields"></div>
+              <div class="actions">
+                <button class="primary" id="computeFullRecordBtn">Compute Full Record</button>
+              </div>
+              <div class="result-box" style="margin-top: 18px;" id="eesResults"></div>
+            </div>
+          </div>
+
+          <aside class="panel">
+            <h2>Parameter Guide</h2>
+            <select id="guideSelect"></select>
+            <div class="info-list" id="guideCards" style="margin-top: 14px;"></div>
+          </aside>
+        </div>
+
+        <div class="panel" style="margin-top: 24px;">
+          <h2>Current Portfolio Snapshot</h2>
+          <section class="stats" id="singleStats"></section>
+          <div class="actions" style="margin-top: 14px;">
+            <button class="ghost" id="clearPortfolioBtnSingle">Clear Saved Portfolio</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-batch">
+        <div class="layout">
+          <div class="panel">
+            <h2>Batch Upload</h2>
+            <div class="dropzone">
+              <div class="small">
+                Upload a CSV or Excel (.xlsx) file exported from your private or public sheet structure. The tool
+                will compute BS, EES, status, and prioritization for every row and merge them into the current
+                browser portfolio.
+              </div>
+              <div class="actions">
+                <input type="file" id="csvFileInput" accept=".csv,text/csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+                <button class="primary" id="importCsvBtn">Import File (CSV / XLSX)</button>
+                <button class="secondary" id="loadDemoBtn">Load Sample Data</button>
+              </div>
+            </div>
+
+            <div class="field" style="margin-top: 18px;">
+              <label for="csvPreview">CSV Preview / Paste Area</label>
+              <textarea id="csvPreview" placeholder="Optional: paste CSV text here instead of uploading a file. (XLSX files must be uploaded, not pasted.)"></textarea>
+            </div>
+
+            <div class="actions">
+              <button class="primary" id="importPastedCsvBtn">Import Pasted CSV</button>
+              <button class="ghost" id="clearPortfolioBtn">Clear Browser Portfolio</button>
+            </div>
+
+            <div class="note small" id="batchStatus">
+              No batch import has been run in this session yet.
+            </div>
+          </div>
+
+          <aside class="panel">
+            <h2>Expected Headers</h2>
+            <div class="small" id="expectedHeaders"></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="view" id="view-dashboard">
+        <section class="stats" id="stats"></section>
+
+        <div class="dashboard-grid">
+          <div class="panel">
+            <h2>BS Distribution (seismic)</h2>
+            <div class="chart-list" id="summaryCharts"></div>
+            <div class="actions">
+              <button class="primary" id="recomputePortfolioBtn">Recompute Portfolio</button>
+              <button class="secondary" id="downloadPortfolioBtn">Download Computed CSV</button>
+              <button class="secondary" id="downloadPortfolioXlsxBtn">Download Computed XLSX</button>
+            </div>
+          </div>
+          <div class="panel">
+            <h2>EES Distribution (energy efficiency)</h2>
+            <div class="chart-list" id="distributionCharts"></div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top: 18px;">
+          <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:end; margin-bottom:14px;">
+            <div>
+              <h2>Computed Portfolio Table</h2>
+              <div class="small" id="tableMeta"></div>
+            </div>
+            <div class="filters">
+              <input id="searchInput" type="text" placeholder="Search building name" />
+              <select id="filterRisk"><option value="">All BS colors</option></select>
+              <select id="filterStatus"><option value="">All status</option></select>
+              <select id="filterSds"><option value="">All SDS bands</option></select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Building Name</th>
+                  <th>BS</th>
+                  <th>EES</th>
+                  <th>Prioritization</th>
+                </tr>
+              </thead>
+              <tbody id="portfolioBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top: 18px;">
+          <h2>Parameter Statistics</h2>
+          <div class="small" style="margin-bottom: 14px;">
+            Distribution of every recorded answer, across all buildings currently loaded in the portfolio.
+          </div>
+          <div class="dashboard-grid">
+            <div class="param-group">
+              <h3>Seismic (BS) parameters</h3>
+              <div class="chart-list" id="bsParamCharts"></div>
+            </div>
+            <div class="param-group">
+              <h3>Energy efficiency (EES) parameters</h3>
+              <div class="chart-list" id="eesParamCharts"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script src="../kabev_dd1_tool/data/buildings_subset.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
