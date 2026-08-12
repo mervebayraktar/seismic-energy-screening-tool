@@ -44,6 +44,8 @@ The public dataset does not provide record-level identifying information such as
 
 ## Tool
 
+**Live tool:** [https://mervebayraktar.github.io/seismic-energy-screening-tool/](https://mervebayraktar.github.io/seismic-energy-screening-tool/)
+
 The browser-based tool is provided as an operational implementation of the workflow.
 
 It can be used to:
