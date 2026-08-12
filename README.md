@@ -32,6 +32,8 @@ If two buildings belong to the same BS risk group and have the same `EES` value,
 
 ## Public Dataset
 
+**Dataset file:** [building_screening_inputs_public.xlsx](data/building_screening_inputs_public.xlsx)
+
 The public dataset is an anonymized example application of the framework.
 
 It is shared to:
